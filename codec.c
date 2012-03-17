@@ -38,11 +38,11 @@ int main (void) {
    
     enum CDC_AOUTX_enum Aoutx_vol = Aout2;
     uint8_t VOL = 33;  //Volume between 0 and -127 dB 
-    CDC_change_output_vol(&initCDC.VOLout_control, VOL, Aoutx_vol);
+    CDC_set_output_vol(&initCDC.VOLout_control, VOL, Aoutx_vol);
     
     enum CDC_AINX_enum Ainx_vol = Ain2;
     int8_t inVOL = 24; //in Volume between 24 to -64
-    CDC_change_input_vol(&initCDC.VOLin_control, inVOL, Ainx_vol);
+    CDC_set_input_vol(&initCDC.VOLin_control, inVOL, Ainx_vol);
     
     enum CDC_ENABLE_enum invert_state = ENABLE;
     enum CDC_AOUTX_enum invert_Aoutx = Aout5;
@@ -226,25 +226,25 @@ char voutDEC2BIN(int DB_VOLUME) {
 }
 
 // Must input volume in positive dB
-void CDC_change_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx) {
-	Aoutx_VOL* VOL_control = &(info->VOLout_control);
-     VOL_control->VOLout[(int)Aoutx] = (uint8_t)(voutDEC2BIN(DB_VOL));
+void CDC_set_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx) {
+	 Aoutx_VOL* VOL_control = &(info->VOLout_control);
+     VOL_control->VOLout[(uint8_t)(Aoutx-1)] = (uint8_t)(voutDEC2BIN(DB_VOL));
      
      //printf("\nAout%d has a volume of -%d (dB) or %X in HEX\n\n", Aoutx, DB_VOL, VOL_control->VOLout[(int)Aoutx]);
      
      int8_t i;
      
-     for (i = 7; i >= 0; i--)
-     {   //printf("Aout%d = %d dB\n", i, VOL_control->VOLout[i]);
+     for (i = 7; i >= 0; i--) {   
+     	//printf("Aout%d = %d dB\n", i, VOL_control->VOLout[i]);
        
         VOL_control->VOLout_control[i] = (uint8_t)(VOL_control->VOLout[i]);
        //printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLout_control[i]));
      }
      
      char temp[2];
-     temp[0] = VOL_control->address[(uint8_t)Aoutx];
-     temp[1] = VOL_control->VOLout_control[(uint8_t)Aoutx];
-     
+     temp[0] = VOL_control->address[(uint8_t)(Aoutx-1)];
+     temp[1] = VOL_control->VOLout_control[(uint8_t)(Aoutx-1)];
+
      I2CSendData(info->address, &(temp[0]), 2);
 }
 
@@ -258,8 +258,8 @@ void CDC_set_inv_out(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx)
     //printf("\nInvert Aout%d\n",Aoutx);
      
      int8_t i;
-     for (i = 7; i >= 0; i--)
-     {   //printf("BIT[%d] = %d\n", i, CDC_inv->INV_Aout_enable[i]);
+     for (i = 7; i >= 0; i--) {   
+     	//printf("BIT[%d] = %d\n", i, CDC_inv->INV_Aout_enable[i]);
        
         CDC_inv->INV_Aout <<= 1;
         CDC_inv->INV_Aout += CDC_inv->INV_Aout_enable[i]; 
@@ -294,35 +294,36 @@ char vinDEC2BIN(int DB_VOLUME) {
     
     char Codec_dB;
     
-    if(DB_VOLUME > 24) {
+    if (DB_VOLUME > 24) {
          DB_VOLUME = 24;
          //printf("Max Vin is 24 dB");
          Codec_dB = start_dB+DB_VOLUME*2;
          return Codec_dB;        
     }
     
-    else
+    else {
         Codec_dB = start_dB+DB_VOLUME*2;
         return Codec_dB;
+    }
     
 }
 
-void CDC_change_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx) {
+void CDC_set_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx) {
 	 Ainx_VOL* VOL_control = &(info->VOLin_control);
-     VOL_control->VOLin[(uint8_t)Ainx] = (int8_t)(vinDEC2BIN(DB_VOL));
+     VOL_control->VOLin[(uint8_t)(Ainx-1)] = (int8_t)(vinDEC2BIN(DB_VOL));
      
      //printf("\nAin%d has a volume of %d (dB) or %X in HEX\n\n", Ainx, DB_VOL, VOL_control->VOLin[(int)Ainx]);
      
      int8_t i;
-     for (i = 7; i >= 0; i--) {
+     for (i = 5; i >= 0; i--) {
      	//printf("Ain%d = %d dB\t", i, VOL_control->VOLin[i]);
        
         VOL_control->VOLin_control[i] = (uint8_t)(VOL_control->VOLin[i]);
      	//printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLin_control[i]));
      }
      char temp[2];
-     temp[0] = VOL_control->address[(uint8_t)Ainx];
-     temp[1] = VOL_control->VOLin_control[(uint8_t)Ainx];
+     temp[0] = VOL_control->address[(uint8_t)(Ainx-1)];
+     temp[1] = VOL_control->VOLin_control[(uint8_t)(Ainx-1)];
      
      I2CSendData(info->address, &(temp[0]), 2);
 }
@@ -448,21 +449,21 @@ int8_t CDC_init(CODEC_info* codec_info) {
        //6.6
         (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[0] = (CDC_ENABLE_enum)DISABLE;
         (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[1] = (CDC_ENABLE_enum)DISABLE;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2] = (CDC_ENABLE_enum)ENABLE;//To run the ADC in 
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3] = (CDC_ENABLE_enum)ENABLE;//Single endded
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4] = (CDC_ENABLE_enum)ENABLE;//inputs
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2] = (CDC_ENABLE_enum)ENABLE; //To run the ADC in 
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3] = (CDC_ENABLE_enum)ENABLE; //Single endded
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4] = (CDC_ENABLE_enum)ENABLE; //inputs
         (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[5] = (CDC_ENABLE_enum)DISABLE;
         (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[6] = (CDC_ENABLE_enum)DISABLE;
         (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.7
        (codec_info->transitionCONTROL).enable_Tcontrol[0] = (CDC_ENABLE_enum)DISABLE; //Must stay 0 //For ADC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[1] = (CDC_ENABLE_enum)ENABLE; //Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[1] = (CDC_ENABLE_enum)ENABLE;  //Must stay 1 //See Data sheet.
        (codec_info->transitionCONTROL).enable_Tcontrol[2] = (CDC_ENABLE_enum)DISABLE;
        (codec_info->transitionCONTROL).enable_Tcontrol[3] = (CDC_ENABLE_enum)DISABLE;
        (codec_info->transitionCONTROL).enable_Tcontrol[4] = (CDC_ENABLE_enum)DISABLE;
        (codec_info->transitionCONTROL).enable_Tcontrol[5] = (CDC_ENABLE_enum)DISABLE; //Must stay 0 //For DAC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[6] = (CDC_ENABLE_enum)ENABLE; //Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[6] = (CDC_ENABLE_enum)ENABLE;  //Must stay 1 //See Data sheet.
        (codec_info->transitionCONTROL).enable_Tcontrol[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.8
@@ -545,17 +546,8 @@ int8_t CDC_init(CODEC_info* codec_info) {
 
 
 int8_t CDC_start(CODEC_info* codec_info) {
-	
-	CDC_set_mute(codec_info, ENABLE, Aout1);
-	CDC_set_mute(codec_info, ENABLE, Aout2);
-	delaymycode(30);
-	CDC_set_mute(codec_info, DISABLE,Aout1);
-	CDC_set_mute(codec_info, DISABLE,Aout2);
-	
-	
-	          
- return 1;
-            
+    
+	return 1;            
 }
 
 #ifdef LIB_DEBUG
@@ -567,5 +559,4 @@ void I2CReadData( uint8_t slave_address, char *ptr_data, uint8_t length) {
 	
    printf("Read it boss!!!\n\n");
 }
-
 #endif

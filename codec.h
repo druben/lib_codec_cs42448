@@ -387,7 +387,7 @@ void CDC_set_mute(CODEC_info* info, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx);
 *                               Address 08h-0hf   For 8 Channels 
 *
 */
-void CDC_change_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx);
+void CDC_set_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx);
 
 
 /*
@@ -407,7 +407,7 @@ void CDC_set_inv_in(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AINX_enum Ainx);
 *                                Address 10h
 *
 */
-void CDC_change_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx);
+void CDC_set_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx);
 
 
 /*
