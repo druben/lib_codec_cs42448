@@ -1,15 +1,14 @@
-
-
-
 #include <stdint.h>
 #include <string.h>
-#include <stdlib.h>
+//#include <stdlib.h>
 #include <stdio.h>
 
+#include "../i2c/lib_I2C.h"
+#include "../menu/menu.h"
 
-#define CDC_ADDRESS ob1001000
-#define DAC_MODE 0b11 // Slave mode to Auto-detect sampling rate
-#define ADC_MODE ob11 // Slave mofe to Auto-detect sampling rate
+#ifndef LIB_DEBUG
+//#define LIB_DEBUG
+#endif
 
 typedef enum CDC_ENABLE {
 	DISABLE = 0,
@@ -212,7 +211,7 @@ typedef struct CDC_MUTE{
     char address;   
 }CDC_MUTE;
 
-void CDC_SET_MUTE(CDC_MUTE* CDC_mute, CDC_ENABLE en, CDC_AOUTx Aoutx);
+//void CDC_SET_MUTE(CODEC_info* info, CDC_ENABLE en, CDC_AOUTx Aoutx);
 
 
 /*
@@ -329,7 +328,7 @@ void set_MUTEC_Polarity(MUTEC_control* Mcontrol, MUTEC_polarity active);
 *                Storing all of the codec information                                                           
 */
 
-typedef struct CODEC_info{
+typedef struct CODEC_info {
         struct CHIP_REGISTER chip_register;      //6.2
         struct CDC_PWR power_control;            //6.3
         struct FUNCTION_MODE  function_mode;     //6.4
@@ -346,11 +345,15 @@ typedef struct CODEC_info{
         struct STATUS MASK_status_control;       //6.15
         struct MUTEC_control mutec_control;      //6.16
         char CDC_address;
-}CODEC_info;
+} CODEC_info;
 
-int8_t CDC_initialization(CODEC_info* codec_info);
+int8_t CDC_init(CODEC_info* codec_info);
 
 int8_t CDC_start(CODEC_info* codec_info);
 
-
+#ifdef LIB_DEBUG
 void I2CSendData( uint8_t slave_address, char *ptr_data, uint8_t length);
+#endif
+
+void CDC_SET_MUTE(CODEC_info* info, CDC_ENABLE en, CDC_AOUTx Aoutx);
+

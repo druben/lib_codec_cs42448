@@ -1,21 +1,11 @@
-
-
-
-#include <stdint.h>
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include "codec.h"
 
-//#include "lib_I2C.h"
-
-
-
+#ifdef LIB_DEBUG
 int main (void) {
     
     CODEC_info initCDC;
     
-    CDC_initialization(&initCDC);
+    CDC_init(&initCDC);
     
     printf("\n\tCodec address: %X\n\n",initCDC.CDC_address);
     
@@ -85,7 +75,9 @@ int main (void) {
     
     system("PAUSE");
     
-}
+}*/
+#endif
+
 /*=============================================================================
 *                   6.1                                                         
 */
@@ -98,10 +90,9 @@ int main (void) {
 *                 Default for Codec look at DATA sheet section 6.2                                       
 */ 
 char CHIP_register(){
- 
- char chip_register = 0x01;
-     
+	return 0x01;
 }
+
 /*=============================================================================
 *                   6.3                                                           
 */
@@ -129,7 +120,7 @@ void CDC_SET_POWER(CDC_PWR* CDC_power, CDC_ENABLE en, CDC_PWR_NAME name){
 */
 
 char FUNCTION_mode(){
-     char function_mode = 0xFE;     
+     return 0xFE;     
 }
 /*============================================================================
 *                   6.5                                                          
@@ -144,7 +135,7 @@ char INTERFACE_format(CDC_ENABLE en){
      if(FREEZE == 1)
                FREEZE <<= 7;
      
-     char interface_format =FREEZE+0x36; //0x36 = 0110110
+     return (FREEZE + 0x36); //0x36 = 0110110
      
      //printf("Interface Format staues: %X\n",(uint8_t)interface_format);
      
@@ -192,21 +183,24 @@ void set_TRANSITIONcontrol(TRANSITION_control* Tcontrol, CDC_ENABLE en, TRANSITI
 /*============================================================================
 *                   6.8                                                          
 */
-void CDC_SET_MUTE(CDC_MUTE* CDC_mute, CDC_ENABLE en, CDC_AOUTx Aoutx){
-     
+void CDC_SET_MUTE(CODEC_info* info, CDC_ENABLE en, CDC_AOUTx Aoutx){
+     CDC_MUTE* CDC_mute = &(info->Aout_mute);
      CDC_mute->m_enable[(int)(Aoutx-1)]=en;
      
       //printf("\nAout%d is muted\n",Aoutx);
      
      int8_t i;
-     
      for (i = 7; i >= 0; i--)
      {   //printf("Codec[%d] = %d\n", i, CDC_mute->m_enable[i]);
-       
         CDC_mute->Aout_mute <<= 1;
         CDC_mute->Aout_mute += CDC_mute->m_enable[i]; 
      }
-     //printf("Mute Status (in HEX): %X\n",(uint8_t)(CDC_mute->Aout_mute));      
+     //printf("Mute Status (in HEX): %X\n",(uint8_t)(CDC_mute->Aout_mute));
+     
+     char temp[2];
+     temp[0] = info->Aout_mute.address;
+     temp[1] = CDC_mute->Aout_mute;
+     I2CSendData(info->CDC_address, &(temp[0]), 2);
 }
 
 /*============================================================================
@@ -316,7 +310,7 @@ void Change_VOLin(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINx Ainx){
 */
 
 char CDC_interupt(){
-     char CDC_interupt = 0x04;    
+     return 0x04;    
 }
 
 /*============================================================================
@@ -364,22 +358,22 @@ void set_status_mask(STATUS* MASKstatus, CDC_ENABLE en, MASK set_interupt){
 
 void set_MUTEC_control(MUTEC_control* Mcontrol, CDC_ENABLE en){
      
-     Mcontrol->mutec_enable[1] = (int)en;
+     Mcontrol->mutec_enable[1] = en;
      
      
 }
 
 void set_MUTEC_Polarity(MUTEC_control* Mcontrol, MUTEC_polarity active){
      
-     Mcontrol->mutec_enable[0] = (int)active;
+     Mcontrol->mutec_enable[0] = (CDC_ENABLE)active;
 }
 /*===========================================================================
 *          Initializing the Codec with information and Coresponding address                                                       
 */
 
-int8_t CDC_initialization(CODEC_info* codec_info){
+int8_t CDC_init(CODEC_info* codec_info){
        
-       codec_info->CDC_address = 0x48; //Codec address of 1001000
+       codec_info->CDC_address = 0x90; //Codec address of 10010000
        
        //initializing the addresses
        (codec_info->chip_register).address = 0x01;
@@ -414,14 +408,14 @@ int8_t CDC_initialization(CODEC_info* codec_info){
        (codec_info->chip_register).chip_register = CHIP_register();
        
        //6.3
-       (codec_info->power_control).p_enable[0]=0;
-       (codec_info->power_control).p_enable[1]=0;
-       (codec_info->power_control).p_enable[2]=0;
-       (codec_info->power_control).p_enable[3]=0;
-       (codec_info->power_control).p_enable[4]=0;
-       (codec_info->power_control).p_enable[5]=0;
-       (codec_info->power_control).p_enable[6]=0;
-       (codec_info->power_control).p_enable[7]=0;
+       (codec_info->power_control).p_enable[0]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[1]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[2]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[3]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[4]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[5]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[6]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[7]= (CDC_ENABLE)DISABLE;
        
        //6.4
        (codec_info->function_mode).function_mode = FUNCTION_mode();
@@ -430,34 +424,34 @@ int8_t CDC_initialization(CODEC_info* codec_info){
        (codec_info->interface_format).interface_format = 0x36; //From Data sheet
        
        //6.6
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[0]=0;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[1]=0;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2]=1;//To run the ADC in 
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3]=1;//Single endded
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4]=1;//inputs
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[5]=0;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[6]=0;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[7]=0;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[0]= (CDC_ENABLE)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[1]= (CDC_ENABLE)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2]= (CDC_ENABLE)ENABLE;//To run the ADC in 
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3]= (CDC_ENABLE)ENABLE;//Single endded
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4]= (CDC_ENABLE)ENABLE;//inputs
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[5]= (CDC_ENABLE)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[6]= (CDC_ENABLE)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[7]= (CDC_ENABLE)DISABLE;
        
        //6.7
-       (codec_info->transitionCONTROL).enable_Tcontrol[0]=0;//Must stay 0 //For ADC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[1]=1;//Must stay 1 //See Data sheet.
-       (codec_info->transitionCONTROL).enable_Tcontrol[2]=0;
-       (codec_info->transitionCONTROL).enable_Tcontrol[3]=0;
-       (codec_info->transitionCONTROL).enable_Tcontrol[4]=0;
-       (codec_info->transitionCONTROL).enable_Tcontrol[5]=0;//Must stay 0 //For DAC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[6]=1;//Must stay 1 //See Data sheet.
-       (codec_info->transitionCONTROL).enable_Tcontrol[7]=0;
+       (codec_info->transitionCONTROL).enable_Tcontrol[0]= (CDC_ENABLE)DISABLE;//Must stay 0 //For ADC Soft Ramp
+       (codec_info->transitionCONTROL).enable_Tcontrol[1]= (CDC_ENABLE)ENABLE;//Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[2]= (CDC_ENABLE)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[3]= (CDC_ENABLE)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[4]= (CDC_ENABLE)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[5]= (CDC_ENABLE)DISABLE;//Must stay 0 //For DAC Soft Ramp
+       (codec_info->transitionCONTROL).enable_Tcontrol[6]= (CDC_ENABLE)ENABLE;//Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[7]= (CDC_ENABLE)DISABLE;
        
        //6.8
-        (codec_info->Aout_mute).m_enable[0]=0;
-        (codec_info->Aout_mute).m_enable[1]=0;
-        (codec_info->Aout_mute).m_enable[2]=0;
-        (codec_info->Aout_mute).m_enable[3]=0;
-        (codec_info->Aout_mute).m_enable[4]=0;
-        (codec_info->Aout_mute).m_enable[5]=0;
-        (codec_info->Aout_mute).m_enable[6]=0;
-        (codec_info->Aout_mute).m_enable[7]=0;
+        (codec_info->Aout_mute).m_enable[0]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[1]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[2]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[3]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[4]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[5]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[6]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[7]= (CDC_ENABLE)DISABLE;
        
        //6.9
         (codec_info->VOLout_control).VOLout[0]=0;
@@ -470,14 +464,14 @@ int8_t CDC_initialization(CODEC_info* codec_info){
         (codec_info->VOLout_control).VOLout[7]=0; 
        
        //6.10
-        (codec_info->INV_Aout_control).INV_Aout_enable[0]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[1]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[2]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[3]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[4]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[5]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[6]=0;
-        (codec_info->INV_Aout_control).INV_Aout_enable[7]=0;
+        (codec_info->INV_Aout_control).INV_Aout_enable[0]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[1]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[2]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[3]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[4]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[5]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[6]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[7]= (CDC_ENABLE)DISABLE;
        
        //6.11
         (codec_info->VOLin_control).VOLin[0]=0;
@@ -490,14 +484,14 @@ int8_t CDC_initialization(CODEC_info* codec_info){
         (codec_info->VOLin_control).VOLin[7]=0;
        
        //6.12
-        (codec_info->INV_Ain_control).INV_Ain_enable[0]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[1]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[2]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[3]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[4]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[5]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[6]=0;
-        (codec_info->INV_Ain_control).INV_Ain_enable[7]=0;
+        (codec_info->INV_Ain_control).INV_Ain_enable[0]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[1]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[2]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[3]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[4]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[5]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[6]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[7]= (CDC_ENABLE) DISABLE;
        //6.13
        (codec_info->CDC_interupt).CDC_interupt = CDC_interupt();
        
@@ -505,45 +499,47 @@ int8_t CDC_initialization(CODEC_info* codec_info){
        //error: no initialization
        
        //6.15
-       (codec_info->MASK_status_control).MASK_status_enable [0] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [1] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [2] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [3] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [4] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [5] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [6] = 0;
-       (codec_info->MASK_status_control).MASK_status_enable [7] = 0;
+       (codec_info->MASK_status_control).MASK_status_enable [0] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [1] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [2] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [3] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [4] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [5] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [6] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [7] = (CDC_ENABLE)DISABLE;
        
        //6.16
-        (codec_info->mutec_control).mutec_enable[0]=0;
-        (codec_info->mutec_control).mutec_enable[1]=0;
-        (codec_info->mutec_control).mutec_enable[2]=0;
-        (codec_info->mutec_control).mutec_enable[3]=0;
-        (codec_info->mutec_control).mutec_enable[4]=0;
-        (codec_info->mutec_control).mutec_enable[5]=0;
-        (codec_info->mutec_control).mutec_enable[6]=0;
-        (codec_info->mutec_control).mutec_enable[7]=0;
+        (codec_info->mutec_control).mutec_enable[0] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[1] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[2] = (CDC_ENABLE)DISABLE; //(2-7 are reserved)
+        (codec_info->mutec_control).mutec_enable[3] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[4] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[5] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[6] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[7] = (CDC_ENABLE)DISABLE;
+        
+        return 1;
 }
 
-int8_t CDC_start(CODEC_info* codec_info){
- 
-            
-            
-            
- 
-            
-}
 
-void I2CSendData( uint8_t slave_address, char *ptr_data, uint8_t length) {
+int8_t CDC_start(CODEC_info* codec_info) {
 	
+	CDC_SET_MUTE(codec_info, ENABLE,Aout1);
+	delaymycode(30);
+	CDC_SET_MUTE(codec_info, DISABLE,Aout1);
+            
+ return 1;
+            
+}
+
+#ifdef LIB_DEBUG
+void I2CSendData( uint8_t slave_address, char *ptr_data, uint8_t length) {
    printf("Sent it boss!!!\n\n");
-   
-   
 }
 
 void I2CReadData( uint8_t slave_address, char *ptr_data, uint8_t length) {
 	
    printf("Read it boss!!!\n\n");
-   
-   
 }
+
+#endif
