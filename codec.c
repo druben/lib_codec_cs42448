@@ -96,14 +96,12 @@ char CDC_chip_register() {
 /*=============================================================================
 *                   6.3                                                           
 */
+void CDC_set_power(CODEC_info* info, CDC_ENABLE_enum en, CDC_PWR_NAME_enum name) {
 
-void CDC_set_power(CDC_PWR* CDC_power, CDC_ENABLE_enum en, CDC_PWR_NAME_enum name) {
-
+	 CDC_PWR* CDC_power = &(info->power_control);
      CDC_power->p_enable[(int)name] = en;
      
-     
-     int8_t i;
-     
+     int8_t i;  
      for (i = 7; i >= 0; i--)
      { //printf("Codec[%d] = %d\n", i, CDC_power->p_enable[i]);
          
@@ -112,8 +110,14 @@ void CDC_set_power(CDC_PWR* CDC_power, CDC_ENABLE_enum en, CDC_PWR_NAME_enum nam
      }
         
        //printf("\nPower Status (in HEX): %X\n",(uint8_t)(CDC_power->power_control));
-       
+     char temp[2];
+     temp[0] = CDC_power->address;
+     temp[1] = CDC_power->power_control;
+     
+     I2CSendData(info->address, &(temp[0]), 2);
 }
+
+
 /*============================================================================
 *                   6.4
 *        from Data sheet :11111xx0                                                                   
@@ -164,21 +168,26 @@ void CDC_set_ADC_DAC_control(ADC_DAC_control* ADcontrol, CDC_ENABLE_enum en, ADC
 *                   6.7  
 *                                                   
 */                  
-void CDC_set_transition_control(TRANSITION_control* Tcontrol, CDC_ENABLE_enum en, TRANSITION_enum bit) {
+void CDC_set_transition_control(CODEC_info* info, CDC_ENABLE_enum en, TRANSITION_enum bit) {
      
+     TRANSITION_control* Tcontrol = &(info->transitionCONTROL);
      Tcontrol->enable_Tcontrol[(int)bit] = en;
      
      //printf("\nChanging bit#%d in Transition control\n",bit);
      
      int8_t i;
-     
      for (i = 7; i >= 0; i--)
      {   //printf("[%d] = %d\n", i, Tcontrol->enable_Tcontrol[i]);
        
         Tcontrol->transitionCONTROL <<= 1;
         Tcontrol->transitionCONTROL += Tcontrol->enable_Tcontrol[i]; 
      }
-     //printf("Mute Status (in HEX): %X\n",(uint8_t)(Tcontrol->transitionCONTROL));  
+     //printf("Mute Status (in HEX): %X\n",(uint8_t)(Tcontrol->transitionCONTROL));
+     char temp[2];
+     temp[0] = Tcontrol->address;
+     temp[1] = Tcontrol->transitionCONTROL;
+     
+     I2CSendData(info->address, &(temp[0]), 2);
 }
 /*============================================================================
 *                   6.8                                                          
@@ -200,7 +209,8 @@ void CDC_set_mute(CODEC_info* info, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx) {
      char temp[2];
      temp[0] = info->Aout_mute.address;
      temp[1] = CDC_mute->Aout_mute;
-     I2CSendData(info->CDC_address, &(temp[0]), 2);
+     
+     I2CSendData(info->address, &(temp[0]), 2);
 }
 
 /*============================================================================
@@ -216,8 +226,8 @@ char voutDEC2BIN(int DB_VOLUME) {
 }
 
 // Must input volume in positive dB
-void CDC_change_output_vol(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTX_enum Aoutx) {
-
+void CDC_change_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx) {
+	Aoutx_VOL* VOL_control = &(info->VOLout_control);
      VOL_control->VOLout[(int)Aoutx] = (uint8_t)(voutDEC2BIN(DB_VOL));
      
      //printf("\nAout%d has a volume of -%d (dB) or %X in HEX\n\n", Aoutx, DB_VOL, VOL_control->VOLout[(int)Aoutx]);
@@ -229,7 +239,13 @@ void CDC_change_output_vol(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTX_enum Ao
        
         VOL_control->VOLout_control[i] = (uint8_t)(VOL_control->VOLout[i]);
        //printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLout_control[i]));
-     }   
+     }
+     
+     char temp[2];
+     temp[0] = VOL_control->address[(uint8_t)Aoutx];
+     temp[1] = VOL_control->VOLout_control[(uint8_t)Aoutx];
+     
+     I2CSendData(info->address, &(temp[0]), 2);
 }
 
 /*============================================================================
@@ -248,7 +264,7 @@ void CDC_set_inv_out(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx)
         CDC_inv->INV_Aout <<= 1;
         CDC_inv->INV_Aout += CDC_inv->INV_Aout_enable[i]; 
      }
-     //printf("Aout inverter Status (in HEX): %X\n",(uint8_t)(CDC_inv->INV_Aout));    
+     //printf("Aout inverter Status (in HEX): %X\n",(uint8_t)(CDC_inv->INV_Aout)); 
 }
 
 void CDC_set_inv_in(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AINX_enum Ainx) {
@@ -291,20 +307,24 @@ char vinDEC2BIN(int DB_VOLUME) {
     
 }
 
-void CDC_change_input_vol(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINX_enum Ainx) {
-
-     VOL_control->VOLin[(int)Ainx] = (int8_t)(vinDEC2BIN(DB_VOL));
+void CDC_change_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx) {
+	 Ainx_VOL* VOL_control = &(info->VOLin_control);
+     VOL_control->VOLin[(uint8_t)Ainx] = (int8_t)(vinDEC2BIN(DB_VOL));
      
      //printf("\nAin%d has a volume of %d (dB) or %X in HEX\n\n", Ainx, DB_VOL, VOL_control->VOLin[(int)Ainx]);
      
      int8_t i;
-     
      for (i = 7; i >= 0; i--) {
      	//printf("Ain%d = %d dB\t", i, VOL_control->VOLin[i]);
        
         VOL_control->VOLin_control[i] = (uint8_t)(VOL_control->VOLin[i]);
      	//printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLin_control[i]));
-     }   
+     }
+     char temp[2];
+     temp[0] = VOL_control->address[(uint8_t)Ainx];
+     temp[1] = VOL_control->VOLin_control[(uint8_t)Ainx];
+     
+     I2CSendData(info->address, &(temp[0]), 2);
 }
 
 /*============================================================================
@@ -375,7 +395,7 @@ void CDC_MUTEC_set_polarity(MUTEC_control* Mcontrol, MUTEC_POLARITY_enum active)
 
 int8_t CDC_init(CODEC_info* codec_info) {
        
-       codec_info->CDC_address = 0x90; //Codec address of 10010000
+       codec_info->address = 0x90; //Codec address of 1001 0000
        
        //initializing the addresses
        (codec_info->chip_register).address = 0x01;
@@ -385,21 +405,21 @@ int8_t CDC_init(CODEC_info* codec_info) {
        (codec_info->ADC_DAC_cont).address = 0x05;
        (codec_info->transitionCONTROL).address = 0x06;
        (codec_info->Aout_mute).address = 0x07;
-       (codec_info->VOLout_control).Aout1_address = 0x08;
-       (codec_info->VOLout_control).Aout2_address = 0x09;
-       (codec_info->VOLout_control).Aout3_address = 0x0A;
-       (codec_info->VOLout_control).Aout4_address = 0x0B;
-       (codec_info->VOLout_control).Aout5_address = 0x0C;
-       (codec_info->VOLout_control).Aout6_address = 0x0D;
-       (codec_info->VOLout_control).Aout7_address = 0x0E;
-       (codec_info->VOLout_control).Aout8_address = 0x0F;
+       (codec_info->VOLout_control).address[0] = 0x08;
+       (codec_info->VOLout_control).address[1] = 0x09;
+       (codec_info->VOLout_control).address[2] = 0x0A;
+       (codec_info->VOLout_control).address[3] = 0x0B;
+       (codec_info->VOLout_control).address[4] = 0x0C;
+       (codec_info->VOLout_control).address[5] = 0x0D;
+       (codec_info->VOLout_control).address[6] = 0x0E;
+       (codec_info->VOLout_control).address[7] = 0x0F;
        (codec_info->INV_Aout_control).DACinv_address = 0x10;
-       (codec_info->VOLin_control).Ain1_address = 0x11;
-       (codec_info->VOLin_control).Ain2_address = 0x12;
-       (codec_info->VOLin_control).Ain3_address = 0x13;
-       (codec_info->VOLin_control).Ain4_address = 0x14;
-       (codec_info->VOLin_control).Ain5_address = 0x15;
-       (codec_info->VOLin_control).Ain6_address = 0x16; 
+       (codec_info->VOLin_control).address[0] = 0x11;
+       (codec_info->VOLin_control).address[1] = 0x12;
+       (codec_info->VOLin_control).address[2] = 0x13;
+       (codec_info->VOLin_control).address[3] = 0x14;
+       (codec_info->VOLin_control).address[4] = 0x15;
+       (codec_info->VOLin_control).address[5] = 0x16; 
        (codec_info->INV_Ain_control).ADCinv_address = 0x17;
        (codec_info->CDC_interupt).address = 0x18;
        (codec_info->status_control).error_address = 0x19;

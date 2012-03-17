@@ -49,7 +49,7 @@ typedef enum CDC_AINX_enum{
 
 typedef enum MUTEC_POLARITY_enum{
         ACTIVElow = 0,
-        ACTIVEhigh=1
+        ACTIVEhigh = 1
 } MUTEC_POLARITY_enum;
 
 typedef enum TRANSITION_enum{
@@ -209,14 +209,7 @@ typedef struct CDC_MUTE{
 typedef struct Aoutx_VOL{ 
     uint8_t VOLout[8];
     char VOLout_control [8];
-    char Aout1_address;
-    char Aout2_address;
-    char Aout3_address;
-    char Aout4_address;
-    char Aout5_address;
-    char Aout6_address;
-    char Aout7_address;
-    char Aout8_address;
+    char address[8];
 }Aoutx_VOL;
 
 
@@ -246,12 +239,7 @@ typedef struct CDC_INV{
 typedef struct Ainx_VOL{
     uint8_t VOLin[8];
     char VOLin_control [6];
-    char Ain1_address;
-    char Ain2_address;
-    char Ain3_address;
-    char Ain4_address;
-    char Ain5_address;
-    char Ain6_address;
+    char address[6];
 }Ainx_VOL;
 
 
@@ -294,7 +282,6 @@ typedef struct MUTEC_control{
 /*==========================================================================
 *                Storing all of the codec information                                                           
 */
-
 typedef struct CODEC_info {
         struct CHIP_REGISTER chip_register;      //6.2
         struct CDC_PWR power_control;            //6.3
@@ -311,23 +298,8 @@ typedef struct CODEC_info {
         struct STATUS status_control;            //6.14
         struct STATUS MASK_status_control;       //6.15
         struct MUTEC_control mutec_control;      //6.16
-        char CDC_address;
+        char address;
 } CODEC_info;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -361,7 +333,7 @@ typedef struct CODEC_info {
 * The contents of the control register are retained in this mode.
 *     (Bit 0 on Power Control)             Default = 0
 */ 
-void CDC_set_power(CDC_PWR* CDC_power, CDC_ENABLE_enum en, CDC_PWR_NAME_enum name);
+void CDC_set_power(CODEC_info* info, CDC_ENABLE_enum en, CDC_PWR_NAME_enum name);
 
      
 /*
@@ -397,7 +369,7 @@ void CDC_set_ADC_DAC_control(ADC_DAC_control* ADcontrol, CDC_ENABLE_enum en, ADC
 *                           Address 06h
 *
 */
-void CDC_set_transition_control(TRANSITION_control* Tcontrol, CDC_ENABLE_enum en, TRANSITION_enum bit);
+void CDC_set_transition_control(CODEC_info* info, CDC_ENABLE_enum en, TRANSITION_enum bit);
 
 
 /*
@@ -415,7 +387,7 @@ void CDC_set_mute(CODEC_info* info, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx);
 *                               Address 08h-0hf   For 8 Channels 
 *
 */
-void CDC_change_output_vol(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTX_enum Aoutx);
+void CDC_change_output_vol(CODEC_info* info, int DB_VOL, CDC_AOUTX_enum Aoutx);
 
 
 /*
@@ -435,7 +407,7 @@ void CDC_set_inv_in(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AINX_enum Ainx);
 *                                Address 10h
 *
 */
-void CDC_change_input_vol(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINX_enum Ainx);
+void CDC_change_input_vol(CODEC_info* info, int DB_VOL, CDC_AINX_enum Ainx);
 
 
 /*
