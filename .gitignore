@@ -1,0 +1,6 @@
+dspsys_lib_codec.exe
+dspsys_lib_codec.dev
+codec.o
+codec.exe
+lib_I2C.?
+Makefile.win
