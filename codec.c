@@ -14,52 +14,52 @@ int main (void) {
     
     //Get code from matt or earl
     //initCDC.status_control
-//    error_check.CDC_status[0]=0;
-//    error_check.CDC_status[1]=0;
-//    error_check.CDC_status[2]=0;
-//    error_check.CDC_status[3]=0;
-//    error_check.CDC_status[4]=0;
+//    error_check.CDC_status[0] = 0;
+//    error_check.CDC_status[1] = 0;
+//    error_check.CDC_status[2] = 0;
+//    error_check.CDC_status[3] = 0;
+//    error_check.CDC_status[4] = 0;
 //    CDC_error(&error_check);
     
-    enum CDC_ENABLE power_state = ENABLE;
-    enum CDC_PWR_NAME DAC_ADC = PDN_ADC3;
-    CDC_SET_POWER(&initCDC.power_control, power_state, DAC_ADC);
+    enum CDC_ENABLE_enum power_state = ENABLE;
+    enum CDC_PWR_NAME_enum DAC_ADC = PDN_ADC3;
+    CDC_set_power(&initCDC.power_control, power_state, DAC_ADC);
    
-    enum CDC_ENABLE Filter_mux = ENABLE;
-    enum ADC_DAC_CONTROL bitnum= ADC1SINGLE;
-    set_ADC_DACcontrol(&initCDC.ADC_DAC_cont, Filter_mux, bitnum);
+    enum CDC_ENABLE_enum Filter_mux = ENABLE;
+    enum ADC_DAC_CONTROL_enum bitnum= ADC1SINGLE;
+    CDC_set_ADC_DAC_control(&initCDC.ADC_DAC_cont, Filter_mux, bitnum);
    
-    enum CDC_ENABLE mute_state = DISABLE;
-    enum CDC_AOUTx mute_Aoutx = Aout2;
-    CDC_SET_MUTE(&initCDC.Aout_mute, mute_state ,mute_Aoutx);
+    enum CDC_ENABLE_enum mute_state = DISABLE;
+    enum CDC_AOUTX_enum mute_Aoutx = Aout2;
+    CDC_set_mute(&initCDC.Aout_mute, mute_state ,mute_Aoutx);
    
-    enum CDC_ENABLE freeze = ENABLE;   
-    INTERFACE_format(freeze);
+    enum CDC_ENABLE_enum freeze = ENABLE;   
+    CDC_set_interface_format(freeze);
    
-    enum CDC_AOUTx Aoutx_vol = Aout2;
+    enum CDC_AOUTX_enum Aoutx_vol = Aout2;
     uint8_t VOL = 33;  //Volume between 0 and -127 dB 
-    Change_VOLout(&initCDC.VOLout_control, VOL, Aoutx_vol);
+    CDC_change_output_vol(&initCDC.VOLout_control, VOL, Aoutx_vol);
     
-    enum CDC_AINx Ainx_vol = Ain2;
+    enum CDC_AINX_enum Ainx_vol = Ain2;
     int8_t inVOL = 24; //in Volume between 24 to -64
-    Change_VOLin(&initCDC.VOLin_control, inVOL, Ainx_vol);
+    CDC_change_input_vol(&initCDC.VOLin_control, inVOL, Ainx_vol);
     
-    enum CDC_ENABLE invert_state = ENABLE;
-    enum CDC_AOUTx invert_Aoutx = Aout5;
-    CDC_SET_INV_OUT(&initCDC.INV_Aout_control,invert_state,invert_Aoutx);
+    enum CDC_ENABLE_enum invert_state = ENABLE;
+    enum CDC_AOUTX_enum invert_Aoutx = Aout5;
+    CDC_set_inv_out(&initCDC.INV_Aout_control,invert_state,invert_Aoutx);
     
-    enum CDC_AINx invert_Ainx = Ain5;
-    CDC_SET_INV_IN(&initCDC.INV_Ain_control,invert_state,invert_Ainx);
+    enum CDC_AINX_enum invert_Ainx = Ain5;
+    CDC_set_inv_in(&initCDC.INV_Ain_control,invert_state,invert_Ainx);
 
     
-    enum CDC_ENABLE TC_state = ENABLE;
+    enum CDC_ENABLE_enum TC_state = ENABLE;
     enum TRANSITION_enum control = DAC_SNGVOL;
-    set_TRANSITIONcontrol(&initCDC.transitionCONTROL, TC_state, control);
+    CDC_set_transition_control(&initCDC.transitionCONTROL, TC_state, control);
     
-    enum MUTEC_polarity Active = ACTIVEhigh; 
-    enum CDC_ENABLE MUTEC = DISABLE;
-    set_MUTEC_control(&initCDC.mutec_control, MUTEC);
-    set_MUTEC_Polarity(&initCDC.mutec_control, Active);
+    enum MUTEC_POLARITY_enum Active = ACTIVEhigh; 
+    enum CDC_ENABLE_enum MUTEC = DISABLE;
+    CDC_MUTEC_set_control(&initCDC.mutec_control, MUTEC);
+    CDC_MUTEC_set_polarity(&initCDC.mutec_control, Active);
     
     int8_t i;
     for (i = 7; i >= 0; i--)
@@ -89,7 +89,7 @@ int main (void) {
 *                 6.2    
 *                 Default for Codec look at DATA sheet section 6.2                                       
 */ 
-char CHIP_register(){
+char CDC_chip_register() {
 	return 0x01;
 }
 
@@ -97,9 +97,9 @@ char CHIP_register(){
 *                   6.3                                                           
 */
 
-void CDC_SET_POWER(CDC_PWR* CDC_power, CDC_ENABLE en, CDC_PWR_NAME name){
+void CDC_set_power(CDC_PWR* CDC_power, CDC_ENABLE_enum en, CDC_PWR_NAME_enum name) {
 
-     CDC_power->p_enable[(int)name]=en;
+     CDC_power->p_enable[(int)name] = en;
      
      
      int8_t i;
@@ -116,17 +116,17 @@ void CDC_SET_POWER(CDC_PWR* CDC_power, CDC_ENABLE en, CDC_PWR_NAME name){
 }
 /*============================================================================
 *                   6.4
-*        from Data cheet :11111xx0                                                                   
+*        from Data sheet :11111xx0                                                                   
 */
 
-char FUNCTION_mode(){
+char CDC_function_mode() {
      return 0xFE;     
 }
 /*============================================================================
 *                   6.5                                                          
 */
 
-char INTERFACE_format(CDC_ENABLE en){
+char CDC_set_interface_format(CDC_ENABLE_enum en) {
      
      uint8_t FREEZE = (uint8_t)en;
      
@@ -145,7 +145,7 @@ char INTERFACE_format(CDC_ENABLE en){
 */
 
 
-void set_ADC_DACcontrol(ADC_DAC_control* ADcontrol, CDC_ENABLE en, ADC_DAC_CONTROL bit){
+void CDC_set_ADC_DAC_control(ADC_DAC_control* ADcontrol, CDC_ENABLE_enum en, ADC_DAC_CONTROL_enum bit) {
      
      ADcontrol->enable_ADC_DAC_cont[(int)bit] = en;
      
@@ -164,9 +164,9 @@ void set_ADC_DACcontrol(ADC_DAC_control* ADcontrol, CDC_ENABLE en, ADC_DAC_CONTR
 *                   6.7  
 *                                                   
 */                  
-void set_TRANSITIONcontrol(TRANSITION_control* Tcontrol, CDC_ENABLE en, TRANSITION_enum bit){
+void CDC_set_transition_control(TRANSITION_control* Tcontrol, CDC_ENABLE_enum en, TRANSITION_enum bit) {
      
-     Tcontrol->enable_Tcontrol[(int)bit]=en;
+     Tcontrol->enable_Tcontrol[(int)bit] = en;
      
      //printf("\nChanging bit#%d in Transition control\n",bit);
      
@@ -183,9 +183,9 @@ void set_TRANSITIONcontrol(TRANSITION_control* Tcontrol, CDC_ENABLE en, TRANSITI
 /*============================================================================
 *                   6.8                                                          
 */
-void CDC_SET_MUTE(CODEC_info* info, CDC_ENABLE en, CDC_AOUTx Aoutx){
+void CDC_set_mute(CODEC_info* info, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx) {
      CDC_MUTE* CDC_mute = &(info->Aout_mute);
-     CDC_mute->m_enable[(int)(Aoutx-1)]=en;
+     CDC_mute->m_enable[(int)(Aoutx-1)] = en;
      
       //printf("\nAout%d is muted\n",Aoutx);
      
@@ -206,17 +206,19 @@ void CDC_SET_MUTE(CODEC_info* info, CDC_ENABLE en, CDC_AOUTx Aoutx){
 /*============================================================================
 *                   6.9                                                          
 */
-char voutDEC2BIN(int DB_VOLUME){
+// Must input volume in positive dB
+char voutDEC2BIN(int DB_VOLUME) {
  
-    uint8_t start_dB=0;
+    uint8_t start_dB = 0;
     char Codec_dB = start_dB+2*DB_VOLUME;
          
     return Codec_dB;
 }
 
-void Change_VOLout(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTx Aoutx){
+// Must input volume in positive dB
+void CDC_change_output_vol(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTX_enum Aoutx) {
 
-     VOL_control->VOLout[(int)Aoutx]= (uint8_t)(voutDEC2BIN(DB_VOL));
+     VOL_control->VOLout[(int)Aoutx] = (uint8_t)(voutDEC2BIN(DB_VOL));
      
      //printf("\nAout%d has a volume of -%d (dB) or %X in HEX\n\n", Aoutx, DB_VOL, VOL_control->VOLout[(int)Aoutx]);
      
@@ -225,7 +227,7 @@ void Change_VOLout(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTx Aoutx){
      for (i = 7; i >= 0; i--)
      {   //printf("Aout%d = %d dB\n", i, VOL_control->VOLout[i]);
        
-        VOL_control->VOLout_control[i]= (uint8_t)(VOL_control->VOLout[i]);
+        VOL_control->VOLout_control[i] = (uint8_t)(VOL_control->VOLout[i]);
        //printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLout_control[i]));
      }   
 }
@@ -233,14 +235,13 @@ void Change_VOLout(Aoutx_VOL* VOL_control, int DB_VOL, CDC_AOUTx Aoutx){
 /*============================================================================
 *                   6.10 & 6.12                                                          
 */
-void CDC_SET_INV_OUT(CDC_INV* CDC_inv, CDC_ENABLE en, CDC_AOUTx Aoutx){
+void CDC_set_inv_out(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AOUTX_enum Aoutx) {
      
      CDC_inv->INV_Aout_enable[(int)(Aoutx-1)] = en;
      
     //printf("\nInvert Aout%d\n",Aoutx);
      
      int8_t i;
-     
      for (i = 7; i >= 0; i--)
      {   //printf("BIT[%d] = %d\n", i, CDC_inv->INV_Aout_enable[i]);
        
@@ -250,7 +251,7 @@ void CDC_SET_INV_OUT(CDC_INV* CDC_inv, CDC_ENABLE en, CDC_AOUTx Aoutx){
      //printf("Aout inverter Status (in HEX): %X\n",(uint8_t)(CDC_inv->INV_Aout));    
 }
 
-void CDC_SET_INV_IN(CDC_INV* CDC_inv, CDC_ENABLE en, CDC_AINx Ainx){
+void CDC_set_inv_in(CDC_INV* CDC_inv, CDC_ENABLE_enum en, CDC_AINX_enum Ainx) {
      
      CDC_inv->INV_Ain_enable[(int)(Ainx-1)] = en;
      
@@ -258,8 +259,8 @@ void CDC_SET_INV_IN(CDC_INV* CDC_inv, CDC_ENABLE en, CDC_AINx Ainx){
      
      int8_t i;
      
-     for (i = 7; i >= 0; i--)
-     {   //printf("Bit[%d] = %d\n", i, CDC_inv->INV_Ain_enable[i]);
+     for (i = 7; i >= 0; i--) {
+     	//printf("Bit[%d] = %d\n", i, CDC_inv->INV_Ain_enable[i]);
        
         CDC_inv->INV_Ain <<= 1;
         CDC_inv->INV_Ain += CDC_inv->INV_Ain_enable[i]; 
@@ -270,15 +271,16 @@ void CDC_SET_INV_IN(CDC_INV* CDC_inv, CDC_ENABLE en, CDC_AINx Ainx){
 *                   6.11                                                        
 */
 
-char vinDEC2BIN(int DB_VOLUME){
+// Input volume can be positive or negative dB
+char vinDEC2BIN(int DB_VOLUME) {
  
-    int8_t start_dB=0;
+    int8_t start_dB = 0;
     
     char Codec_dB;
     
-    if(DB_VOLUME > 24){
+    if(DB_VOLUME > 24) {
          DB_VOLUME = 24;
-         printf("Max Vin is 24 dB");
+         //printf("Max Vin is 24 dB");
          Codec_dB = start_dB+DB_VOLUME*2;
          return Codec_dB;        
     }
@@ -289,19 +291,19 @@ char vinDEC2BIN(int DB_VOLUME){
     
 }
 
-void Change_VOLin(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINx Ainx){
+void CDC_change_input_vol(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINX_enum Ainx) {
 
-     VOL_control->VOLin[(int)Ainx]= (int8_t)(vinDEC2BIN(DB_VOL));
+     VOL_control->VOLin[(int)Ainx] = (int8_t)(vinDEC2BIN(DB_VOL));
      
      //printf("\nAin%d has a volume of %d (dB) or %X in HEX\n\n", Ainx, DB_VOL, VOL_control->VOLin[(int)Ainx]);
      
      int8_t i;
      
-     for (i = 7; i >= 0; i--)
-     {   //printf("Ain%d = %d dB\t", i, VOL_control->VOLin[i]);
+     for (i = 7; i >= 0; i--) {
+     	//printf("Ain%d = %d dB\t", i, VOL_control->VOLin[i]);
        
         VOL_control->VOLin_control[i] = (uint8_t)(VOL_control->VOLin[i]);
-      // printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLin_control[i]));
+     	//printf("[%d] = %u\n", i, (uint8_t)(VOL_control->VOLin_control[i]));
      }   
 }
 
@@ -309,7 +311,7 @@ void Change_VOLin(Ainx_VOL* VOL_control, int DB_VOL, CDC_AINx Ainx){
 *                   6.13                                                        
 */
 
-char CDC_interupt(){
+char CDC_interupt() {
      return 0x04;    
 }
 
@@ -317,7 +319,7 @@ char CDC_interupt(){
 *                   6.14                                                        
 */
 
-void CDC_error(STATUS* errors){
+void CDC_error(STATUS* errors) {
      
      if(errors->CDC_status[4] == 1)
         printf("\n\t!DAC Clock Error see 6.14.1 in Data sheet!\t\n");
@@ -336,42 +338,42 @@ void CDC_error(STATUS* errors){
 *                   6.15                                                        
 */
 
-void set_status_mask(STATUS* MASKstatus, CDC_ENABLE en, MASK set_interupt){
+void CDC_set_status_mask(STATUS* MASKstatus, CDC_ENABLE_enum en, CDC_MASK_enum set_interupt) {
  
      MASKstatus->MASK_status_enable [(int)set_interupt] = en;
      
      int8_t i;
      
-     for (i = 7; i >= 0; i--)
-     {   //printf("Bit[%d] = %d\n", i, MASKstatus->MASK_status_enable[i]);
+     for (i = 7; i >= 0; i--) {   
+     	//printf("Bit[%d] = %d\n", i, MASKstatus->MASK_status_enable[i]);
        
         MASKstatus->MASK_status <<= 1;
         MASKstatus->MASK_status += MASKstatus->MASK_status_enable[i]; 
      }
-     //printf("Status Mask interupt control: %X\n\n",(uint8_t)(MASKstatus->MASK_status));
-     
-     
+	//printf("Status Mask interupt control: %X\n\n",(uint8_t)(MASKstatus->MASK_status)); 
 }
+
+
 /*============================================================================
 *                   6.16                                                       
 */
 
-void set_MUTEC_control(MUTEC_control* Mcontrol, CDC_ENABLE en){
+void CDC_MUTEC_set_control(MUTEC_control* Mcontrol, CDC_ENABLE_enum en) {
      
      Mcontrol->mutec_enable[1] = en;
-     
-     
 }
 
-void set_MUTEC_Polarity(MUTEC_control* Mcontrol, MUTEC_polarity active){
+void CDC_MUTEC_set_polarity(MUTEC_control* Mcontrol, MUTEC_POLARITY_enum active) {
      
-     Mcontrol->mutec_enable[0] = (CDC_ENABLE)active;
+     Mcontrol->mutec_enable[0] = (CDC_ENABLE_enum)active;
 }
+
+
 /*===========================================================================
 *          Initializing the Codec with information and Coresponding address                                                       
 */
 
-int8_t CDC_init(CODEC_info* codec_info){
+int8_t CDC_init(CODEC_info* codec_info) {
        
        codec_info->CDC_address = 0x90; //Codec address of 10010000
        
@@ -404,94 +406,94 @@ int8_t CDC_init(CODEC_info* codec_info){
        (codec_info->MASK_status_control).mask_address = 0x1A;
        (codec_info->mutec_control).address = 0x1B;
        
-       //6.2
-       (codec_info->chip_register).chip_register = CHIP_register();
+       //6.2  TODO:  This should be read from the chip if important
+       (codec_info->chip_register).chip_register = CDC_chip_register();
        
        //6.3
-       (codec_info->power_control).p_enable[0]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[1]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[2]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[3]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[4]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[5]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[6]= (CDC_ENABLE)DISABLE;
-       (codec_info->power_control).p_enable[7]= (CDC_ENABLE)DISABLE;
+       (codec_info->power_control).p_enable[0] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[1] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[2] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[3] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[4] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[5] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[6] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->power_control).p_enable[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.4
-       (codec_info->function_mode).function_mode = FUNCTION_mode();
+       (codec_info->function_mode).function_mode = CDC_function_mode();
        
        //6.5
        (codec_info->interface_format).interface_format = 0x36; //From Data sheet
        
        //6.6
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[0]= (CDC_ENABLE)DISABLE;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[1]= (CDC_ENABLE)DISABLE;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2]= (CDC_ENABLE)ENABLE;//To run the ADC in 
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3]= (CDC_ENABLE)ENABLE;//Single endded
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4]= (CDC_ENABLE)ENABLE;//inputs
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[5]= (CDC_ENABLE)DISABLE;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[6]= (CDC_ENABLE)DISABLE;
-        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[7]= (CDC_ENABLE)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[0] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[1] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[2] = (CDC_ENABLE_enum)ENABLE;//To run the ADC in 
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[3] = (CDC_ENABLE_enum)ENABLE;//Single endded
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[4] = (CDC_ENABLE_enum)ENABLE;//inputs
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[5] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[6] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->ADC_DAC_cont).enable_ADC_DAC_cont[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.7
-       (codec_info->transitionCONTROL).enable_Tcontrol[0]= (CDC_ENABLE)DISABLE;//Must stay 0 //For ADC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[1]= (CDC_ENABLE)ENABLE;//Must stay 1 //See Data sheet.
-       (codec_info->transitionCONTROL).enable_Tcontrol[2]= (CDC_ENABLE)DISABLE;
-       (codec_info->transitionCONTROL).enable_Tcontrol[3]= (CDC_ENABLE)DISABLE;
-       (codec_info->transitionCONTROL).enable_Tcontrol[4]= (CDC_ENABLE)DISABLE;
-       (codec_info->transitionCONTROL).enable_Tcontrol[5]= (CDC_ENABLE)DISABLE;//Must stay 0 //For DAC Soft Ramp
-       (codec_info->transitionCONTROL).enable_Tcontrol[6]= (CDC_ENABLE)ENABLE;//Must stay 1 //See Data sheet.
-       (codec_info->transitionCONTROL).enable_Tcontrol[7]= (CDC_ENABLE)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[0] = (CDC_ENABLE_enum)DISABLE; //Must stay 0 //For ADC Soft Ramp
+       (codec_info->transitionCONTROL).enable_Tcontrol[1] = (CDC_ENABLE_enum)ENABLE; //Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[2] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[3] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[4] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->transitionCONTROL).enable_Tcontrol[5] = (CDC_ENABLE_enum)DISABLE; //Must stay 0 //For DAC Soft Ramp
+       (codec_info->transitionCONTROL).enable_Tcontrol[6] = (CDC_ENABLE_enum)ENABLE; //Must stay 1 //See Data sheet.
+       (codec_info->transitionCONTROL).enable_Tcontrol[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.8
-        (codec_info->Aout_mute).m_enable[0]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[1]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[2]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[3]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[4]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[5]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[6]= (CDC_ENABLE)DISABLE;
-        (codec_info->Aout_mute).m_enable[7]= (CDC_ENABLE)DISABLE;
+        (codec_info->Aout_mute).m_enable[0] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[1] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[2] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[3] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[4] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[5] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[6] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->Aout_mute).m_enable[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.9
-        (codec_info->VOLout_control).VOLout[0]=0;
-        (codec_info->VOLout_control).VOLout[1]=0;
-        (codec_info->VOLout_control).VOLout[2]=0;
-        (codec_info->VOLout_control).VOLout[3]=0;
-        (codec_info->VOLout_control).VOLout[4]=0;
-        (codec_info->VOLout_control).VOLout[5]=0;
-        (codec_info->VOLout_control).VOLout[6]=0;
-        (codec_info->VOLout_control).VOLout[7]=0; 
+        (codec_info->VOLout_control).VOLout[0] = 0;
+        (codec_info->VOLout_control).VOLout[1] = 0;
+        (codec_info->VOLout_control).VOLout[2] = 0;
+        (codec_info->VOLout_control).VOLout[3] = 0;
+        (codec_info->VOLout_control).VOLout[4] = 0;
+        (codec_info->VOLout_control).VOLout[5] = 0;
+        (codec_info->VOLout_control).VOLout[6] = 0;
+        (codec_info->VOLout_control).VOLout[7] = 0; 
        
        //6.10
-        (codec_info->INV_Aout_control).INV_Aout_enable[0]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[1]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[2]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[3]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[4]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[5]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[6]= (CDC_ENABLE)DISABLE;
-        (codec_info->INV_Aout_control).INV_Aout_enable[7]= (CDC_ENABLE)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[0] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[1] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[2] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[3] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[4] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[5] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[6] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Aout_control).INV_Aout_enable[7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.11
-        (codec_info->VOLin_control).VOLin[0]=0;
-        (codec_info->VOLin_control).VOLin[1]=0;
-        (codec_info->VOLin_control).VOLin[2]=0;
-        (codec_info->VOLin_control).VOLin[3]=0;
-        (codec_info->VOLin_control).VOLin[4]=0;
-        (codec_info->VOLin_control).VOLin[5]=0;
-        (codec_info->VOLin_control).VOLin[6]=0;
-        (codec_info->VOLin_control).VOLin[7]=0;
+        (codec_info->VOLin_control).VOLin[0] = 0;
+        (codec_info->VOLin_control).VOLin[1] = 0;
+        (codec_info->VOLin_control).VOLin[2] = 0;
+        (codec_info->VOLin_control).VOLin[3] = 0;
+        (codec_info->VOLin_control).VOLin[4] = 0;
+        (codec_info->VOLin_control).VOLin[5] = 0;
+        (codec_info->VOLin_control).VOLin[6] = 0;
+        (codec_info->VOLin_control).VOLin[7] = 0;
        
        //6.12
-        (codec_info->INV_Ain_control).INV_Ain_enable[0]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[1]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[2]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[3]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[4]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[5]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[6]= (CDC_ENABLE) DISABLE;
-        (codec_info->INV_Ain_control).INV_Ain_enable[7]= (CDC_ENABLE) DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[0] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[1] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[2] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[3] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[4] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[5] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[6] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->INV_Ain_control).INV_Ain_enable[7] = (CDC_ENABLE_enum)DISABLE;
        //6.13
        (codec_info->CDC_interupt).CDC_interupt = CDC_interupt();
        
@@ -499,24 +501,24 @@ int8_t CDC_init(CODEC_info* codec_info){
        //error: no initialization
        
        //6.15
-       (codec_info->MASK_status_control).MASK_status_enable [0] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [1] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [2] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [3] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [4] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [5] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [6] = (CDC_ENABLE)DISABLE;
-       (codec_info->MASK_status_control).MASK_status_enable [7] = (CDC_ENABLE)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [0] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [1] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [2] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [3] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [4] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [5] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [6] = (CDC_ENABLE_enum)DISABLE;
+       (codec_info->MASK_status_control).MASK_status_enable [7] = (CDC_ENABLE_enum)DISABLE;
        
        //6.16
-        (codec_info->mutec_control).mutec_enable[0] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[1] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[2] = (CDC_ENABLE)DISABLE; //(2-7 are reserved)
-        (codec_info->mutec_control).mutec_enable[3] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[4] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[5] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[6] = (CDC_ENABLE)DISABLE;
-        (codec_info->mutec_control).mutec_enable[7] = (CDC_ENABLE)DISABLE;
+        (codec_info->mutec_control).mutec_enable[0] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[1] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[2] = (CDC_ENABLE_enum)DISABLE; //(2-7 are reserved)
+        (codec_info->mutec_control).mutec_enable[3] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[4] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[5] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[6] = (CDC_ENABLE_enum)DISABLE;
+        (codec_info->mutec_control).mutec_enable[7] = (CDC_ENABLE_enum)DISABLE;
         
         return 1;
 }
@@ -524,10 +526,14 @@ int8_t CDC_init(CODEC_info* codec_info){
 
 int8_t CDC_start(CODEC_info* codec_info) {
 	
-	CDC_SET_MUTE(codec_info, ENABLE,Aout1);
+	CDC_set_mute(codec_info, ENABLE, Aout1);
+	CDC_set_mute(codec_info, ENABLE, Aout2);
 	delaymycode(30);
-	CDC_SET_MUTE(codec_info, DISABLE,Aout1);
-            
+	CDC_set_mute(codec_info, DISABLE,Aout1);
+	CDC_set_mute(codec_info, DISABLE,Aout2);
+	
+	
+	          
  return 1;
             
 }
